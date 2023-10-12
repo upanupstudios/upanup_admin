@@ -1,0 +1,15 @@
+admin-toolbar:
+  version: 1.x
+  css:
+    theme:
+      libraries/admin-toolbar/scss-css/toolbar.css: {weight: 1}
+ck5:
+  version: 1.x
+  css:
+    theme:
+      libraries/ck5/scss-css/ck5.css: {}
+node-edit:
+  version: 1.x
+  css:
+    layout:
+      libraries/node-edit/scss-css/layout.css: {}

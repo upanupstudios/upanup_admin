@@ -1,0 +1,18 @@
+.cau-node-edit {
+  &__main {
+    clear: both;
+    display: block;
+    width: 100%;
+  }
+  &__secondary {
+    clear: both;
+    margin-top: 32px !important;
+    width: 100%;
+  }
+  &__footer {
+    clear: both;
+    display: block;
+    margin: 32px 0 0 0;
+    width: 100%;
+  }
+}

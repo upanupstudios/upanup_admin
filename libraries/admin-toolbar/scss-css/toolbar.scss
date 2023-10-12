@@ -1,0 +1,33 @@
+.toolbar {
+  font: normal 100%/1.5 BlinkMacSystemFont, -apple-system, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  .toolbar-bar {
+    background-color: #f3f4f9;
+    border-bottom: 1px solid rgba(216, 217, 224, 0.8);
+    box-shadow: none;
+    .toolbar-item {color: #222330;}
+    .toolbar-tab {
+      > .toolbar-item.is-active {
+        background: #222330;
+        color: #ffffff;
+      }
+    }
+  }
+  .toolbar-tray-vertical {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(216, 217, 224, 0.8);
+    border-right: 1px solid rgba(216, 217, 224, 0.8);
+  }
+}
+.toolbar-horizontal {
+  .toolbar-tray {
+    box-shadow: none;
+    border-top: 1px solid rgba(216, 217, 224, 0.8);
+    border-bottom: 1px solid rgba(216, 217, 224, 0.8);
+  }
+}
+.toolbar-tray-horizontal {
+  .menu-item--expanded {background: #ffffff;}
+  ul li.menu-item--expanded.hover-intent ul {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}

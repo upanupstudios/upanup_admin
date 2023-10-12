@@ -1,0 +1,23 @@
+{{ attach_library('upanup_admin/node-edit') }}
+{{ attach_library('upanup_admin/ck5') }}
+
+<div class="cau-node-edit clearfix">
+  <div class="cau-node-edit cau-node-edit__main">
+    <div class="layout-region__content">
+      {{ form|without('advanced', 'footer', 'actions') }}
+    </div>
+  </div>
+  <details data-drupal-selector="cau-secondary" class="cau-node-edit cau-node-edit__secondary claro-details" data-once="details">
+    <summary role="button" aria-controls="cau-secondary" aria-expanded="true" aria-pressed="true" class="claro-details__summary">{{ 'Advanced settings'|t }}</summary>
+    <div class="layout-region__content claro-details__wrapper details-wrapper">
+      {{ form.advanced }}
+    </div>
+  </details>
+  <div class="cau-node-edit cau-node-edit__footer">
+    <div class="layout-region__content">
+      <div class="divider"></div>
+      {{ form.footer }}
+      {{ form.actions }}
+    </div>
+  </div>
+</div>

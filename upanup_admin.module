@@ -1,0 +1,52 @@
+<?php
+
+/**
+ * Implements hook_theme().
+ */
+function upanup_admin_theme() {
+  $theme['paragraph__content_row__preview'] = [
+    'base hook' => 'paragraph',
+  ];
+
+  return $theme;
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK().
+ */
+
+ function upanup_admin_theme_suggestions_paragraph_alter(array &$suggestions,array $variables) {
+
+  if(!empty($variables['elements']['#view_mode']) && $variables['elements']['#view_mode'] == 'preview') {
+    $suggestions[] = 'paragraph__content_row__preview';
+  }
+
+}
+
+/**
+ * Implements hook_page_attachments_alter().
+ */
+function upanup_admin_page_attachments_alter(array &$page) {
+  $page['#attached']['library'][] = 'upanup_admin/ck5';
+  if (has_toolbar()) {
+    $page['#attached']['library'][] = 'upanup_admin/admin-toolbar';
+  }
+}
+
+/**
+ * Implements hook_theme_registry_alter().
+ */
+function upanup_admin_theme_registry_alter(&$theme_registry) {
+  // Override an existing Twig template file with the one provided by my custom module
+  $theme_registry['node_edit_form']['path'] = \Drupal::service('extension.list.module')->getPath('upanup_admin') . '/templates';
+}
+
+/**
+ * Helper function for checking user permission.
+ *
+ * Returns TRUE or FALSE.
+ */
+function has_toolbar() {
+  $user = \Drupal::currentUser();
+  return $user->hasPermission('access toolbar');
+}
