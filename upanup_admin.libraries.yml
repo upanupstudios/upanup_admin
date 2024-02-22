@@ -13,3 +13,5 @@ node-edit:
   css:
     layout:
       libraries/node-edit/scss-css/layout.css: {}
+  js:
+    libraries/node-edit/js/node-edit.min.js: {}
