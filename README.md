@@ -35,6 +35,11 @@ Example:
 
 ### [Unreleased]
 
+### [1.0.2] - 2024-02-22
+
+#### Added
+- Added JS to node-edit library that checks for a required form element within the Advanced settings details element and opens it if so
+
 ### [1.0.1] - 2024-01-24
 
 #### Fixed
