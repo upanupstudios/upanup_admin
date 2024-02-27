@@ -35,6 +35,11 @@ Example:
 
 ### [Unreleased]
 
+### [1.0.3] - 2024-02-27
+
+#### Fixed
+- Added `.js .paragraph-type-title { overflow: visible !important; }` in `layout.scss`. This was used in an old version of the module, but the load order of `drupal.paragraphs.admin` and `drupal.paragraphs.widget` libraries in the _Paragraphs_ module means this is still required in some cases.
+
 ### [1.0.2] - 2024-02-22
 
 #### Added
