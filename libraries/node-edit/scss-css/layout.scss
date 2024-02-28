@@ -17,6 +17,8 @@
   }
 }
 
+// Fixes an issue where drupal.paragraphs.admin loads before drupal.paragraphs.widget library
 .js .paragraph-type-title{
-  overflow: visible!important;
+  flex-basis: 25% !important;
+  min-width: 80px !important;
 }
