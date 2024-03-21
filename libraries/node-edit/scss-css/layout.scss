@@ -3,6 +3,9 @@
     clear: both;
     display: block;
     width: 100%;
+    .form-actions .form-wrapper, .field-actions .form-wrapper {
+      .form-type--select {width: 100%;}
+    }
   }
   &__secondary {
     clear: both;
