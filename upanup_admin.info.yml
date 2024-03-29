@@ -1,9 +1,9 @@
 name: Upanup Admin Module
-core_version_requirement: ^9.0 || ^10
 description: Admin functionality and styling updates for Upanup's base state
+version: '10.x-1.0'
+core_version_requirement: ^9.0 || ^10
 package: Administration
 type: module
-version: '10.x-1.0'
 dependencies:
   - admin_toolbar:admin_toolbar
   - ckeditor5:ckeditor5

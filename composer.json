@@ -1,0 +1,15 @@
+{
+    "name": "upanupstudios/upanup_admin",
+    "description": "Admin functionality and styling updates for Upanup's base state",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Esrah Boulton"
+        }
+    ],
+    "require": {
+        "drupal/admin_toolbar": "^3.4",
+        "drupal/ckeditor": "^1.0"
+    }
+}
