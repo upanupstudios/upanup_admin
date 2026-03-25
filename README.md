@@ -10,6 +10,19 @@ Custom module that provides admin UI enhancements, styling overrides, and admin 
 
 ---
 
+## Requirements
+
+- Drupal 10 or 11
+- DNS record pointing to the server IP (e.g. `name.admin.upanup.com` or `admin.domain.com`)
+- Wildcard SSL certificate for the domain
+
+## Installation
+
+1. Enable the module: `drush en upanup_admin`
+   - Or through Drupal admin, navigate to ** Extend ** and enable `Upanup Admin`
+2. Navigate to **Administration > Upanup Admin > Settings** to configure.
+3. Ensure DNS and SSL are configured before enabling.
+
 ## Features
 
 ### Admin Redirect

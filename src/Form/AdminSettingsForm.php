@@ -8,7 +8,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Define class for admin settings.
@@ -60,11 +59,10 @@ class AdminSettingsForm extends ConfigFormBase {
    * @param \Drupal\Core\Messenger\MessengerInterface
    *   The messenger service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, MessengerInterface $messenger, RequestStack $request_stack) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, MessengerInterface $messenger) {
     $this->configFactory = $config_factory;
     $this->logger = $logger_factory->get('upanup_admin');
     $this->messenger = $messenger;
-    $this->requestStack = $request_stack;
 
     // Get settings.
     $this->settings = $this->configFactory->get('upanup_admin.settings');
@@ -78,7 +76,6 @@ class AdminSettingsForm extends ConfigFormBase {
       $container->get('config.factory'),
       $container->get('logger.factory'),
       $container->get('messenger'),
-      $container->get('request_stack'),
     );
   }
 
@@ -100,12 +97,6 @@ class AdminSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $request = $this->requestStack->getCurrentRequest();
-    $host = $request->getHost();
-
-    // Remove www.
-    $host = preg_replace('/www\./', '', $host);
-
     $form['redirect_enabled'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable admin redirect'),
@@ -123,7 +114,7 @@ class AdminSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Admin Method'),
       '#options' => [
         'upanup_admin' => $this->t('Upanup Admin (name.admin.upanup.com)'),
-        'admin_domain' => $this->t('Admin Domain (admin.' . $host . ')'),
+        'admin_domain' => $this->t('Admin Domain (admin.domain.com)'),
       ],
       '#default_value' => $this->settings->get('admin_method') ?: 'upanup_admin',
       '#required' => TRUE,
