@@ -1,0 +1,9 @@
+upanup_admin.upanup_admin:
+  path: '/admin/upanup_admin'
+  defaults:
+    _form: '\Drupal\upanup_admin\Form\AdminSettingsForm'
+    _title: 'Upanup Admin'
+  requirements:
+    _permission: 'administer upanup_admin'
+  options:
+    _admin_route: TRUE

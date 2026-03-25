@@ -1,56 +1,75 @@
-# upanup_admin
-Module that handles styling, functionality in the admin area of Upanup sites.
+# Upanup Admin
 
-## Changelog
+## Overview
 
-All notable changes to this project will be documented in this file.
+Custom module that provides admin UI enhancements, styling overrides, and admin redirect functionality for Upanup Drupal sites.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+- **Package:** Upanup
+- **Version:** 10.x-2.0
+- **Drupal compatibility:** ^9.0 || ^10
 
-Example:
+---
 
-```
-### [#.#.#] - YYYY-MM-DD
+## Features
 
-#### Added
-- for new features.
+### Admin Redirect
 
-#### Changed
-- for changes in existing functionality.
+An event subscriber (`CustomAdminRedirect`) fires on every request and can redirect anonymous users to or from the admin domain. Two redirect strategies are supported, configurable via the settings form:
 
-#### Deprecated
-- for soon-to-be removed features.
+- **Upanup Admin** — uses the `name.admin.upanup.com` subdomain pattern.
+- **Admin Domain** — uses the `admin.domain.com` subdomain pattern.
 
-#### Removed
-- for now removed features.
+The redirect is only applied to anonymous users and targets login/logout routes (`user.login`, `user.logout`). If the `upanup_auth` or `samlauth` modules are present, login/logout routes are also included.
 
-#### Fixed
-- for any bug fixes.
+### Admin Styling
 
-#### Security
-- in case of vulnerabilities.
-```
+Custom CSS libraries are conditionally attached to every page:
 
+- **`ck5`** — Style overrides for the CKEditor 5 editor.
+- **`admin-toolbar`** — Style overrides for the Admin Toolbar, loaded only for users with the `access toolbar` permission.
 
+SCSS source files are included alongside the compiled CSS under `libraries/`.
 
-### [Unreleased]
+### Node Edit Form Override
 
-### [1.0.3] - 2024-02-27
+Overrides the core `node_edit_form` Twig template with a custom version located in `templates/`, allowing layout customisation of the node edit page.
 
-#### Fixed
-- Added `.js .paragraph-type-title { flex-basis: 25% !important; min-width: 80px !important; }` in `layout.scss`. This matches styling from the `drupal.paragraphs.admin` library, but the load order of `drupal.paragraphs.admin` and `drupal.paragraphs.widget` libraries in the _Paragraphs_ module means this is required in some cases.
+### Paragraph Preview Template
 
-### [1.0.2] - 2024-02-22
+Registers a custom theme suggestion (`paragraph__content_row__preview`) applied to any paragraph rendered in the `preview` view mode, with a corresponding template at `templates/paragraph--content-row--preview.html.twig`.
 
-#### Added
-- Added JS to node-edit library that checks for a required form element within the Advanced settings details element and opens it if so
+---
 
-### [1.0.1] - 2024-01-24
+## Configuration
 
-#### Fixed
-- Template suggestion in `upanup_admin.module` now checks to ensure the bundle is `content_row`, which avoids issues where this template would be used for any `preview` template
+Navigate to **Admin > Configuration > User Interface > Upanup Admin** (`/admin/upanup_admin`).
 
-### [1.0.0] - 2023-10-12
+| Setting | Description |
+|---|---|
+| Enable admin redirect | Toggles the redirect behaviour on or off. |
+| Admin Method | Selects the redirect strategy: **Upanup Admin** or **Admin Domain**. |
+| Admin Name | The subdomain name used when Admin Method is set to **Upanup Admin**. |
 
-#### Added
-- Initial commit
+Requires the `administer upanup_admin` permission.
+
+---
+
+## Dependencies
+
+- [Admin Toolbar](https://www.drupal.org/project/admin_toolbar) (`admin_toolbar:admin_toolbar`)
+- [CKEditor 5](https://www.drupal.org/project/ckeditor5) (`ckeditor5:ckeditor5`)
+
+---
+
+## Permissions
+
+| Permission | Description |
+|---|---|
+| `administer upanup_admin` | Access and save the Upanup Admin settings form. |
+
+---
+
+## Notes
+
+- Update `.htaccess` to redirect only root domains to `www`.
+- Add admin subdomains to the Shield module allowlist domains configuration.

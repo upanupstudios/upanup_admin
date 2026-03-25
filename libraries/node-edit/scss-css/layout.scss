@@ -3,9 +3,6 @@
     clear: both;
     display: block;
     width: 100%;
-    .form-actions .form-wrapper, .field-actions .form-wrapper {
-      .form-type--select {width: 100%;}
-    }
   }
   &__secondary {
     clear: both;
@@ -18,10 +15,4 @@
     margin: 32px 0 0 0;
     width: 100%;
   }
-}
-
-// Fixes an issue where drupal.paragraphs.admin loads before drupal.paragraphs.widget library
-.js .paragraph-type-title{
-  flex-basis: 25% !important;
-  min-width: 80px !important;
 }

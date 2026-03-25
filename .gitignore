@@ -1,1 +1,5 @@
+# Upanup Environment Ignores
 *.DS_Store
+*.zip
+*.tar.gz
+*.icloud

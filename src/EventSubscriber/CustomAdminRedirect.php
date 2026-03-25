@@ -1,0 +1,179 @@
+<?php
+
+namespace Drupal\upanup_admin\EventSubscriber;
+
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Routing\TrustedRedirectResponse;
+use Drupal\Core\Session\AccountInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
+
+/**
+ * The CustomAdminRedirect class.
+ */
+class CustomAdminRedirect implements EventSubscriberInterface {
+
+  /**
+   * The config factory interface.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
+   * The current route match.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected RouteMatchInterface $routeMatch;
+
+  /**
+   * The current account.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
+  protected AccountInterface $account;
+
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected ModuleHandlerInterface $moduleHandler;
+
+  /**
+   * The settings config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $settings;
+
+  /**
+   * Constructs a CustomAdminRedirect.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory interface.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
+   *   The current route match.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The current account.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   *   The module handler.
+   */
+  public function __construct(ConfigFactoryInterface $config_factory, RouteMatchInterface $routeMatch, AccountInterface $account, ModuleHandlerInterface $moduleHandler) {
+    $this->configFactory = $config_factory;
+    $this->routeMatch = $routeMatch;
+    $this->account = $account;
+    $this->moduleHandler = $moduleHandler;
+
+    // Get settings.
+    $this->settings = $this->configFactory->get('upanup_admin.settings');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getSubscribedEvents() {
+    // The number 30 is the priority.
+    // This is set at 30 so that it runs before page caching (priority 27).
+    $events[KernelEvents::REQUEST][] = ['onRequest', 30];
+    return $events;
+  }
+
+  /**
+   * Handle redirection from www to admin when logging in and from admin to www
+   * when logging out.
+   *
+   * @param \Symfony\Component\HttpKernel\Event\RequestEvent $event
+   *   The request.
+   */
+  public function onRequest(RequestEvent $event) {
+    $redirect_enabled = $this->settings->get('redirect_enabled');
+
+    if (!empty($redirect_enabled)) {
+      $request = $event->getRequest();
+      $scheme = $request->getScheme();
+      $host = $request->getHost();
+      $uri = $request->getRequestUri();
+      $route_name = $this->routeMatch->getRouteName();
+
+      // Check if modules are installed/enabled
+      $upanup_auth_exists = $this->moduleHandler->moduleExists('upanup_auth');
+      $samlauth_exists = $this->moduleHandler->moduleExists('samlauth');
+
+      $redirect_routes = [
+        'user.login',
+        'user.logout',
+      ];
+
+      if (!empty($upanup_auth_exists)) {
+        $redirect_routes[] = 'upanup_auth.saml_controller_login';
+        $redirect_routes[] = 'upanup_auth.saml_controller_logout';
+      }
+
+      if (!empty($samlauth_exists)) {
+        $redirect_routes[] = 'samlauth.saml_controller_login';
+        $redirect_routes[] = 'samlauth.saml_controller_logout';
+      }
+
+      if ($this->account->isAnonymous()) {
+        $admin_method = $this->settings->get('admin_method');
+
+        if ($admin_method == 'upanup_admin') {
+          // Admin host pattern, can use either one
+          $admin_host_pattern = '/(admin\.upanup\.com)$/';
+        } else {
+          $admin_host_pattern = '/(^admin\.)/';
+        }
+
+        // WWW host pattern
+        $www_host_pattern = '/^www\./';
+
+        // URI pattern.
+        $uri_pattern = '/^\/(user)\//';
+
+        if (!empty($upanup_auth_exists)) {
+          $uri_pattern = preg_replace('/user/', 'user|upanup', $uri_pattern);
+        }
+
+        if (!empty($samlauth_exists)) {
+          $uri_pattern = preg_replace('/user/', 'user|saml', $uri_pattern);
+        }
+
+        // Redirect www to admin
+        if (preg_match($www_host_pattern, $host)) {
+          if (in_array($route_name, $redirect_routes) && preg_match($uri_pattern, $uri)) {
+            // Redirect to admin
+            if ($admin_method == 'upanup_admin') {
+              $admin_name = $this->settings->get('admin_name');
+              $host = $admin_name . '.admin.upanup.com';
+            }
+            else {
+              $host = preg_replace($www_host_pattern, 'admin.', $host);
+            }
+
+            $url = $scheme . '://' . $host . $uri;
+
+            $response = new TrustedRedirectResponse($url);
+            $event->setResponse($response);
+          }
+        }
+
+        // Redirects admin to www
+        if (preg_match($admin_host_pattern, $host)) {
+          if (!in_array($route_name, $redirect_routes) && !preg_match($uri_pattern, $uri)) {
+            $host = preg_replace($admin_host_pattern, 'www.', $host);
+            $url = 'https://' . $host . $uri;
+
+            $response = new TrustedRedirectResponse($url);
+            $event->setResponse($response);
+          }
+        }
+      }
+    }
+  }
+
+}

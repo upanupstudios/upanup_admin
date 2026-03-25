@@ -1,0 +1,5 @@
+upanup_admin.upanup_admin:
+  title: 'Upanup Admin'
+  route_name: upanup_admin.upanup_admin
+  description: 'Configure Upanup Admin.'
+  parent: system.admin_config_ui

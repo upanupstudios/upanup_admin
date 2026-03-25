@@ -14,15 +14,9 @@ function upanup_admin_theme() {
 /**
  * Implements hook_theme_suggestions_HOOK().
  */
+function upanup_admin_theme_suggestions_paragraph_alter(array &$suggestions,array $variables) {
 
- function upanup_admin_theme_suggestions_paragraph_alter(array &$suggestions,array $variables) {
-
-  if (
-    !empty($variables['elements']['#view_mode']) &&
-    $variables['elements']['#view_mode'] == 'preview' &&
-    !empty($variables['elements']['#bundle']) &&
-    $variables['elements']['#bundle'] == 'content_row'
-  ) {
+  if(!empty($variables['elements']['#view_mode']) && $variables['elements']['#view_mode'] == 'preview') {
     $suggestions[] = 'paragraph__content_row__preview';
   }
 
