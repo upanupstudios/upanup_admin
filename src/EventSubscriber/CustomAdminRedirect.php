@@ -3,6 +3,7 @@
 namespace Drupal\upanup_admin\EventSubscriber;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Routing\TrustedRedirectResponse;
@@ -12,7 +13,7 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
- * The CustomAdminRedirect class.
+ * Event subscriber for redirecting between www and admin domains.
  */
 class CustomAdminRedirect implements EventSubscriberInterface {
 
@@ -100,7 +101,7 @@ class CustomAdminRedirect implements EventSubscriberInterface {
       $uri = $request->getRequestUri();
       $route_name = $this->routeMatch->getRouteName();
 
-      // Check if modules are installed/enabled
+      // Check if modules are installed/enabled.
       $upanup_auth_exists = $this->moduleHandler->moduleExists('upanup_auth');
       $samlauth_exists = $this->moduleHandler->moduleExists('samlauth');
 
@@ -122,32 +123,34 @@ class CustomAdminRedirect implements EventSubscriberInterface {
       if ($this->account->isAnonymous()) {
         $admin_method = $this->settings->get('admin_method');
 
-        if ($admin_method == 'upanup_admin') {
-          // Admin host pattern, can use either one
+        if ($admin_method === 'upanup_admin') {
+          // Admin host pattern, can use either one.
           $admin_host_pattern = '/(admin\.upanup\.com)$/';
         } else {
           $admin_host_pattern = '/(^admin\.)/';
         }
 
-        // WWW host pattern
+        // WWW host pattern.
         $www_host_pattern = '/^www\./';
 
         // URI pattern.
-        $uri_pattern = '/^\/(user)\//';
+        $uri_segments = ['user'];
 
         if ($upanup_auth_exists) {
-          $uri_pattern = preg_replace('/user/', 'user|upanup', $uri_pattern);
+          $uri_segments[] = 'upanup';
         }
 
         if ($samlauth_exists) {
-          $uri_pattern = preg_replace('/user/', 'user|saml', $uri_pattern);
+          $uri_segments[] = 'saml';
         }
 
-        // Redirect www to admin
+        $uri_pattern = '/^\\/(' . implode('|', $uri_segments) . ')\//';
+
+        // Redirect www to admin.
         if (preg_match($www_host_pattern, $host)) {
           if (in_array($route_name, $redirect_routes) && preg_match($uri_pattern, $uri)) {
-            // Redirect to admin
-            if ($admin_method == 'upanup_admin') {
+            // Redirect to admin.
+            if ($admin_method === 'upanup_admin') {
               $admin_name = $this->settings->get('admin_name');
               $host = $admin_name . '.admin.upanup.com';
             }
@@ -155,16 +158,15 @@ class CustomAdminRedirect implements EventSubscriberInterface {
               $host = preg_replace($www_host_pattern, 'admin.', $host);
             }
 
-            $path = parse_url($uri, PHP_URL_PATH) ?? '/';
-            $url = $scheme . '://' . $host . $path;
+            $url = $scheme . '://' . $host . $uri;
 
             $response = new TrustedRedirectResponse($url);
             $event->setResponse($response);
           }
         }
 
-        // Redirects admin to www
-        if (preg_match($admin_host_pattern, $host)) {
+        // Redirects admin to www.
+        if ($admin_method !== 'upanup_admin' && preg_match($admin_host_pattern, $host)) {
           if (!in_array($route_name, $redirect_routes) && !preg_match($uri_pattern, $uri)) {
             $host = preg_replace($admin_host_pattern, 'www.', $host);
             $url = 'https://' . $host . $uri;

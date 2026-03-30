@@ -10,16 +10,9 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Define class for admin settings.
+ * Provides a settings form for Upanup Admin.
  */
 class AdminSettingsForm extends ConfigFormBase {
-
-  /**
-   * The config factory interface.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
 
   /**
    * The logger service.
@@ -55,7 +48,6 @@ class AdminSettingsForm extends ConfigFormBase {
   public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, MessengerInterface $messenger) {
     parent::__construct($config_factory);
 
-    $this->configFactory = $config_factory;
     $this->logger = $logger_factory->get('upanup_admin');
     $this->messenger = $messenger;
 
@@ -98,11 +90,11 @@ class AdminSettingsForm extends ConfigFormBase {
       '#default_value' => $this->settings->get('redirect_enabled'),
     ];
 
-    // Server details
+    // Redirect settings.
     $form['redirect'] = [
       '#type' => 'details',
       '#title' => $this->t('Settings'),
-      '#open' => TRUE
+      '#open' => TRUE,
     ];
     $form['redirect']['admin_method'] = [
       '#type' => 'radios',
@@ -137,8 +129,11 @@ class AdminSettingsForm extends ConfigFormBase {
     $admin_method = $form_state->getValue('admin_method');
     $admin_name = $form_state->getValue('admin_name');
 
-    if ($admin_method == 'upanup_admin') {
-      if (!preg_match('/^[a-z0-9]+$/i', $admin_name)) {
+    if ($admin_method === 'upanup_admin') {
+      if (empty($admin_name)) {
+        $form_state->setErrorByName('admin_name', $this->t('Admin name is required.'));
+      }
+      elseif (!preg_match('/^[a-z0-9]+$/i', $admin_name)) {
         $form_state->setErrorByName('admin_name', $this->t('Admin name may only contain alphanumeric characters.'));
       }
     }
