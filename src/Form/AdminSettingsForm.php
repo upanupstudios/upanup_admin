@@ -6,7 +6,6 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Messenger\MessengerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -22,13 +21,6 @@ class AdminSettingsForm extends ConfigFormBase {
   protected $logger;
 
   /**
-   * The messenger service.
-   *
-   * @var \Drupal\Core\Messenger\MessengerInterface
-   */
-  protected $messenger;
-
-  /**
    * The config instance.
    *
    * @var \Drupal\Core\Config\ImmutableConfig
@@ -42,14 +34,11 @@ class AdminSettingsForm extends ConfigFormBase {
    *   The config factory interface.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   The logger channel factory interface.
-   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
-   *   The messenger service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, MessengerInterface $messenger) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory) {
     parent::__construct($config_factory);
 
     $this->logger = $logger_factory->get('upanup_admin');
-    $this->messenger = $messenger;
 
     // Get settings.
     $this->settings = $this->configFactory->get('upanup_admin.settings');
@@ -62,7 +51,6 @@ class AdminSettingsForm extends ConfigFormBase {
     return new static(
       $container->get('config.factory'),
       $container->get('logger.factory'),
-      $container->get('messenger'),
     );
   }
 
@@ -155,6 +143,10 @@ class AdminSettingsForm extends ConfigFormBase {
       ->set('admin_method', $admin_method)
       ->set('admin_name', $admin_name)
       ->save();
+
+    $this->logger->info('Upanup Admin settings updated by @user.', [
+      '@user' => $this->currentUser()->getAccountName(),
+    ]);
 
     parent::submitForm($form, $form_state);
   }

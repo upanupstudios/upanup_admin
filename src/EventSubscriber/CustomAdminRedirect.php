@@ -126,7 +126,8 @@ class CustomAdminRedirect implements EventSubscriberInterface {
         if ($admin_method === 'upanup_admin') {
           // Admin host pattern, can use either one.
           $admin_host_pattern = '/(admin\.upanup\.com)$/';
-        } else {
+        }
+        else {
           $admin_host_pattern = '/(^admin\.)/';
         }
 
