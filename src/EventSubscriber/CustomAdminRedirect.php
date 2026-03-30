@@ -120,33 +120,33 @@ class CustomAdminRedirect implements EventSubscriberInterface {
         $redirect_routes[] = 'samlauth.saml_controller_logout';
       }
 
+      $admin_method = $this->settings->get('admin_method');
+
+      if ($admin_method === 'upanup_admin') {
+        // Admin host pattern, can use either one.
+        $admin_host_pattern = '/(admin\.upanup\.com)$/';
+      }
+      else {
+        $admin_host_pattern = '/(^admin\.)/';
+      }
+
+      // WWW host pattern.
+      $www_host_pattern = '/^www\./';
+
+      // URI pattern.
+      $uri_segments = ['user'];
+
+      if ($upanup_auth_exists) {
+        $uri_segments[] = 'upanup';
+      }
+
+      if ($samlauth_exists) {
+        $uri_segments[] = 'saml';
+      }
+
+      $uri_pattern = '/^\\/(' . implode('|', $uri_segments) . ')\//';
+
       if ($this->account->isAnonymous()) {
-        $admin_method = $this->settings->get('admin_method');
-
-        if ($admin_method === 'upanup_admin') {
-          // Admin host pattern, can use either one.
-          $admin_host_pattern = '/(admin\.upanup\.com)$/';
-        }
-        else {
-          $admin_host_pattern = '/(^admin\.)/';
-        }
-
-        // WWW host pattern.
-        $www_host_pattern = '/^www\./';
-
-        // URI pattern.
-        $uri_segments = ['user'];
-
-        if ($upanup_auth_exists) {
-          $uri_segments[] = 'upanup';
-        }
-
-        if ($samlauth_exists) {
-          $uri_segments[] = 'saml';
-        }
-
-        $uri_pattern = '/^\\/(' . implode('|', $uri_segments) . ')\//';
-
         // Redirect www to admin.
         if (preg_match($www_host_pattern, $host)) {
           if (in_array($route_name, $redirect_routes) && preg_match($uri_pattern, $uri)) {
@@ -175,6 +175,23 @@ class CustomAdminRedirect implements EventSubscriberInterface {
             $response = new TrustedRedirectResponse($url);
             $event->setResponse($response);
           }
+        }
+      }
+      else {
+        // Redirect authenticated users from www to admin.
+        if (preg_match($www_host_pattern, $host)) {
+          if ($admin_method === 'upanup_admin') {
+            $admin_name = $this->settings->get('admin_name');
+            $host = $admin_name . '.admin.upanup.com';
+          }
+          else {
+            $host = preg_replace($www_host_pattern, 'admin.', $host);
+          }
+
+          $url = $scheme . '://' . $host . $uri;
+
+          $response = new TrustedRedirectResponse($url);
+          $event->setResponse($response);
         }
       }
     }
