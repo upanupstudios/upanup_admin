@@ -22,9 +22,9 @@ class AdminSettingsForm extends ConfigFormBase {
   protected $configFactory;
 
   /**
-   * Messenger service.
+   * The logger service.
    *
-   * @var Drupal\Core\Logger\LoggerChannel
+   * @var \Drupal\Core\Logger\LoggerChannel
    */
   protected $logger;
 
@@ -34,13 +34,6 @@ class AdminSettingsForm extends ConfigFormBase {
    * @var \Drupal\Core\Messenger\MessengerInterface
    */
   protected $messenger;
-
-  /**
-   * The request stack instance.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
 
   /**
    * The config instance.
@@ -56,10 +49,12 @@ class AdminSettingsForm extends ConfigFormBase {
    *   The config factory interface.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   The logger channel factory interface.
-   * @param \Drupal\Core\Messenger\MessengerInterface
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
    */
   public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelFactoryInterface $logger_factory, MessengerInterface $messenger) {
+    parent::__construct($config_factory);
+
     $this->configFactory = $config_factory;
     $this->logger = $logger_factory->get('upanup_admin');
     $this->messenger = $messenger;
@@ -100,7 +95,7 @@ class AdminSettingsForm extends ConfigFormBase {
     $form['redirect_enabled'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Enable admin redirect'),
-      '#default_value' => $this->settings->get('redirect_enabled')
+      '#default_value' => $this->settings->get('redirect_enabled'),
     ];
 
     // Server details
@@ -144,19 +139,17 @@ class AdminSettingsForm extends ConfigFormBase {
 
     if ($admin_method == 'upanup_admin') {
       if (!preg_match('/^[a-z0-9]+$/i', $admin_name)) {
-        $form_state->setErrorByName('subdomain', $this->t('Admin name may only contain alphanumeric characters.'));
+        $form_state->setErrorByName('admin_name', $this->t('Admin name may only contain alphanumeric characters.'));
       }
     }
 
-    //TODO: Validate if the domain is reachable.
+    // TODO: Validate if the domain is reachable.
   }
 
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $settings = $this->config('upanup_admin.settings');
-
     // Save configuration.
     $redirect_enabled = $form_state->getValue('redirect_enabled');
     $admin_method = $form_state->getValue('admin_method');
@@ -168,7 +161,7 @@ class AdminSettingsForm extends ConfigFormBase {
       ->set('admin_name', $admin_name)
       ->save();
 
-    return parent::submitForm($form, $form_state);
+    parent::submitForm($form, $form_state);
   }
 
 }

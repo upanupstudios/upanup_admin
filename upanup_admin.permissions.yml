@@ -1,3 +1,4 @@
 administer upanup_admin:
   title: 'Administer Upanup Admin'
   description: 'Administer Upanup Admin settings'
+  restrict access: true

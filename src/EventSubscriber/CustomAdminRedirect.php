@@ -21,7 +21,7 @@ class CustomAdminRedirect implements EventSubscriberInterface {
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
-  protected $configFactory;
+  protected ConfigFactoryInterface $configFactory;
 
   /**
    * The current route match.
@@ -49,25 +49,25 @@ class CustomAdminRedirect implements EventSubscriberInterface {
    *
    * @var \Drupal\Core\Config\ImmutableConfig
    */
-  protected $settings;
+  protected ImmutableConfig $settings;
 
   /**
    * Constructs a CustomAdminRedirect.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The config factory interface.
-   * @param \Drupal\Core\Routing\RouteMatchInterface $routeMatch
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The current route match.
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The current account.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, RouteMatchInterface $routeMatch, AccountInterface $account, ModuleHandlerInterface $moduleHandler) {
+  public function __construct(ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match, AccountInterface $account, ModuleHandlerInterface $module_handler) {
     $this->configFactory = $config_factory;
-    $this->routeMatch = $routeMatch;
+    $this->routeMatch = $route_match;
     $this->account = $account;
-    $this->moduleHandler = $moduleHandler;
+    $this->moduleHandler = $module_handler;
 
     // Get settings.
     $this->settings = $this->configFactory->get('upanup_admin.settings');
@@ -109,12 +109,12 @@ class CustomAdminRedirect implements EventSubscriberInterface {
         'user.logout',
       ];
 
-      if (!empty($upanup_auth_exists)) {
+      if ($upanup_auth_exists) {
         $redirect_routes[] = 'upanup_auth.saml_controller_login';
         $redirect_routes[] = 'upanup_auth.saml_controller_logout';
       }
 
-      if (!empty($samlauth_exists)) {
+      if ($samlauth_exists) {
         $redirect_routes[] = 'samlauth.saml_controller_login';
         $redirect_routes[] = 'samlauth.saml_controller_logout';
       }
@@ -135,11 +135,11 @@ class CustomAdminRedirect implements EventSubscriberInterface {
         // URI pattern.
         $uri_pattern = '/^\/(user)\//';
 
-        if (!empty($upanup_auth_exists)) {
+        if ($upanup_auth_exists) {
           $uri_pattern = preg_replace('/user/', 'user|upanup', $uri_pattern);
         }
 
-        if (!empty($samlauth_exists)) {
+        if ($samlauth_exists) {
           $uri_pattern = preg_replace('/user/', 'user|saml', $uri_pattern);
         }
 
@@ -155,7 +155,8 @@ class CustomAdminRedirect implements EventSubscriberInterface {
               $host = preg_replace($www_host_pattern, 'admin.', $host);
             }
 
-            $url = $scheme . '://' . $host . $uri;
+            $path = parse_url($uri, PHP_URL_PATH) ?? '/';
+            $url = $scheme . '://' . $host . $path;
 
             $response = new TrustedRedirectResponse($url);
             $event->setResponse($response);
