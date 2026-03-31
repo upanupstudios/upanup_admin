@@ -105,20 +105,25 @@ class CustomAdminRedirect implements EventSubscriberInterface {
       $upanup_auth_exists = $this->moduleHandler->moduleExists('upanup_auth');
       $samlauth_exists = $this->moduleHandler->moduleExists('samlauth');
 
-      $redirect_routes = [
+      $login_routes = [
         'user.login',
+      ];
+
+      $logout_routes = [
         'user.logout',
       ];
 
       if ($upanup_auth_exists) {
-        $redirect_routes[] = 'upanup_auth.saml_controller_login';
-        $redirect_routes[] = 'upanup_auth.saml_controller_logout';
+        $login_routes[] = 'upanup_auth.saml_controller_login';
+        $logout_routes[] = 'upanup_auth.saml_controller_logout';
       }
 
       if ($samlauth_exists) {
-        $redirect_routes[] = 'samlauth.saml_controller_login';
-        $redirect_routes[] = 'samlauth.saml_controller_logout';
+        $login_routes[] = 'samlauth.saml_controller_login';
+        $logout_routes[] = 'samlauth.saml_controller_logout';
       }
+
+      $redirect_routes = array_merge($login_routes, $logout_routes);
 
       $admin_method = $this->settings->get('admin_method');
 
@@ -166,9 +171,9 @@ class CustomAdminRedirect implements EventSubscriberInterface {
           }
         }
 
-        // Redirects admin to www.
+        // Redirects admin to www on logout.
         if ($admin_method !== 'upanup_admin' && preg_match($admin_host_pattern, $host)) {
-          if (!in_array($route_name, $redirect_routes) && !preg_match($uri_pattern, $uri)) {
+          if (in_array($route_name, $logout_routes)) {
             $host = preg_replace($admin_host_pattern, 'www.', $host);
             $url = 'https://' . $host . $uri;
 
