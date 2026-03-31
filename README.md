@@ -6,7 +6,7 @@ Custom module that provides admin UI enhancements, styling overrides, and admin 
 
 - **Package:** Upanup
 - **Version:** 10.x-2.0
-- **Drupal compatibility:** ^9.0 || ^10
+- **Drupal compatibility:** ^9.0 || ^10 || ^11
 
 ---
 
