@@ -90,6 +90,7 @@ class AdminSettingsForm extends ConfigFormBase {
       '#options' => [
         'upanup_admin' => $this->t('Upanup Admin (name.admin.upanup.com)'),
         'admin_domain' => $this->t('Admin Domain (admin.domain.com)'),
+        'admin_subdomain' => $this->t('Admin Subdomain (name.sub.domain.com)'),
       ],
       '#default_value' => $this->settings->get('admin_method') ?: 'upanup_admin',
       '#required' => TRUE,
@@ -100,7 +101,9 @@ class AdminSettingsForm extends ConfigFormBase {
       '#default_value' => $this->settings->get('admin_name'),
       '#states' => [
         'visible' => [
-          ':input[name="admin_method"]' => ['value' => 'upanup_admin'],
+          [':input[name="admin_method"]' => ['value' => 'upanup_admin']],
+          'or',
+          [':input[name="admin_method"]' => ['value' => 'admin_subdomain']],
         ],
       ],
     ];
@@ -117,7 +120,7 @@ class AdminSettingsForm extends ConfigFormBase {
     $admin_method = $form_state->getValue('admin_method');
     $admin_name = $form_state->getValue('admin_name');
 
-    if ($admin_method === 'upanup_admin') {
+    if ($admin_method === 'upanup_admin' || $admin_method === 'admin_subdomain') {
       if (empty($admin_name)) {
         $form_state->setErrorByName('admin_name', $this->t('Admin name is required.'));
       }

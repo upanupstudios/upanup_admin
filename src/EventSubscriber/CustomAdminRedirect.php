@@ -127,17 +127,6 @@ class CustomAdminRedirect implements EventSubscriberInterface {
 
       $admin_method = $this->settings->get('admin_method');
 
-      if ($admin_method === 'upanup_admin') {
-        // Admin host pattern, can use either one.
-        $admin_host_pattern = '/(admin\.upanup\.com)$/';
-      }
-      else {
-        $admin_host_pattern = '/(^admin\.)/';
-      }
-
-      // WWW host pattern.
-      $www_host_pattern = '/^www\./';
-
       // URI pattern.
       $uri_segments = ['user'];
 
@@ -151,11 +140,81 @@ class CustomAdminRedirect implements EventSubscriberInterface {
 
       $uri_pattern = '/^\\/(' . implode('|', $uri_segments) . ')\//';
 
-      if ($this->account->isAnonymous()) {
-        // Redirect www to admin.
-        if (preg_match($www_host_pattern, $host)) {
-          if (in_array($route_name, $redirect_routes) && preg_match($uri_pattern, $uri)) {
-            // Redirect to admin.
+      if ($admin_method === 'admin_subdomain') {
+        $admin_name = $this->settings->get('admin_name');
+        $admin_prefix_pattern = '/^' . preg_quote($admin_name, '/') . '\./';
+        $is_admin_host = (bool) preg_match($admin_prefix_pattern, $host);
+
+        if ($this->account->isAnonymous()) {
+          // Redirect regular host to admin on login.
+          if (!$is_admin_host && in_array($route_name, $login_routes) && preg_match($uri_pattern, $uri)) {
+            $url = $scheme . '://' . $admin_name . '.' . $host . $uri;
+            $response = new TrustedRedirectResponse($url);
+            $event->setResponse($response);
+          }
+          // Redirect admin host to regular on logout.
+          elseif ($is_admin_host && in_array($route_name, $logout_routes)) {
+            $regular_host = substr($host, strlen($admin_name) + 1);
+            $url = 'https://' . $regular_host . $uri;
+            $response = new TrustedRedirectResponse($url);
+            $event->setResponse($response);
+          }
+        }
+        else {
+          // Redirect authenticated users from regular host to admin.
+          if (!$is_admin_host) {
+            $url = $scheme . '://' . $admin_name . '.' . $host . $uri;
+            $response = new TrustedRedirectResponse($url);
+            $event->setResponse($response);
+          }
+        }
+      }
+      else {
+        // WWW host pattern.
+        $www_host_pattern = '/^www\./';
+
+        if ($admin_method === 'upanup_admin') {
+          // Admin host pattern, can use either one.
+          $admin_host_pattern = '/(admin\.upanup\.com)$/';
+        }
+        else {
+          $admin_host_pattern = '/(^admin\.)/';
+        }
+
+        if ($this->account->isAnonymous()) {
+          // Redirect www to admin.
+          if (preg_match($www_host_pattern, $host)) {
+            if (in_array($route_name, $redirect_routes) && preg_match($uri_pattern, $uri)) {
+              // Redirect to admin.
+              if ($admin_method === 'upanup_admin') {
+                $admin_name = $this->settings->get('admin_name');
+                $host = $admin_name . '.admin.upanup.com';
+              }
+              else {
+                $host = preg_replace($www_host_pattern, 'admin.', $host);
+              }
+
+              $url = $scheme . '://' . $host . $uri;
+
+              $response = new TrustedRedirectResponse($url);
+              $event->setResponse($response);
+            }
+          }
+
+          // Redirects admin to www on logout.
+          if ($admin_method !== 'upanup_admin' && preg_match($admin_host_pattern, $host)) {
+            if (in_array($route_name, $logout_routes)) {
+              $host = preg_replace($admin_host_pattern, 'www.', $host);
+              $url = 'https://' . $host . $uri;
+
+              $response = new TrustedRedirectResponse($url);
+              $event->setResponse($response);
+            }
+          }
+        }
+        else {
+          // Redirect authenticated users from www to admin.
+          if (preg_match($www_host_pattern, $host)) {
             if ($admin_method === 'upanup_admin') {
               $admin_name = $this->settings->get('admin_name');
               $host = $admin_name . '.admin.upanup.com';
@@ -169,34 +228,6 @@ class CustomAdminRedirect implements EventSubscriberInterface {
             $response = new TrustedRedirectResponse($url);
             $event->setResponse($response);
           }
-        }
-
-        // Redirects admin to www on logout.
-        if ($admin_method !== 'upanup_admin' && preg_match($admin_host_pattern, $host)) {
-          if (in_array($route_name, $logout_routes)) {
-            $host = preg_replace($admin_host_pattern, 'www.', $host);
-            $url = 'https://' . $host . $uri;
-
-            $response = new TrustedRedirectResponse($url);
-            $event->setResponse($response);
-          }
-        }
-      }
-      else {
-        // Redirect authenticated users from www to admin.
-        if (preg_match($www_host_pattern, $host)) {
-          if ($admin_method === 'upanup_admin') {
-            $admin_name = $this->settings->get('admin_name');
-            $host = $admin_name . '.admin.upanup.com';
-          }
-          else {
-            $host = preg_replace($www_host_pattern, 'admin.', $host);
-          }
-
-          $url = $scheme . '://' . $host . $uri;
-
-          $response = new TrustedRedirectResponse($url);
-          $event->setResponse($response);
         }
       }
     }
