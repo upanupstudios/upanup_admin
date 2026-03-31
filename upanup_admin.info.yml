@@ -1,7 +1,7 @@
 name: Upanup Admin Module
 description: Admin functionality and styling updates for Upanup's base state
 type: module
-core_version_requirement: ^9.0 || ^10
+core_version_requirement: ^9.0 || ^10 || ^11
 package: Upanup
 version: '10.x-2.0'
 dependencies:

@@ -13,8 +13,9 @@ Custom module that provides admin UI enhancements, styling overrides, and admin 
 ## Requirements
 
 - Drupal 10 or 11
-- DNS record pointing to the server IP (e.g. `name.admin.upanup.com` or `admin.domain.com`)
-- Wildcard SSL certificate for the domain
+- DNS record pointing to the server IP or domain (e.g. `name.admin.upanup.com`, `admin.domain.com`, `name.admin.domain.com`)
+- Alternatively use a wildcard DNS record (e.g. `*.domain.com` or `*.admin.domain.com`)
+- SSL certificate for the domains, can also be a wildcard
 
 ## Installation
 
@@ -27,10 +28,11 @@ Custom module that provides admin UI enhancements, styling overrides, and admin 
 
 ### Admin Redirect
 
-An event subscriber (`CustomAdminRedirect`) fires on every request and can redirect anonymous users to or from the admin domain. Two redirect strategies are supported, configurable via the settings form:
+An event subscriber (`CustomAdminRedirect`) fires on every request and can redirect anonymous users to or from the admin domain. Three redirect strategies are supported, configurable via the settings form:
 
-- **Upanup Admin** — uses the `name.admin.upanup.com` subdomain pattern.
-- **Admin Domain** — uses the `admin.domain.com` subdomain pattern.
+- **Upanup Admin** — uses the `name.admin.upanup.com` subdomain pattern. Requires an **Admin Name**.
+- **Admin Domain** — uses the `admin.domain.com` subdomain pattern. Optionally accepts a **Custom Admin Name** to override the `admin` prefix (e.g. `custom.domain.com`).
+- **Admin Subdomain** — uses the `name.admin.domain.com` subdomain pattern. Requires an **Admin Name** and optionally a **Custom Admin Name** to override the `admin` prefix.
 
 The redirect is only applied to anonymous users and targets login/logout routes (`user.login`, `user.logout`). If the `upanup_auth` or `samlauth` modules are present, login/logout routes are also included.
 
@@ -60,8 +62,9 @@ Navigate to **Admin > Configuration > User Interface > Upanup Admin** (`/admin/u
 | Setting | Description |
 |---|---|
 | Enable admin redirect | Toggles the redirect behaviour on or off. |
-| Admin Method | Selects the redirect strategy: **Upanup Admin** or **Admin Domain**. |
-| Admin Name | The subdomain name used when Admin Method is set to **Upanup Admin**. |
+| Admin Method | Selects the redirect strategy: **Upanup Admin**, **Admin Domain**, or **Admin Subdomain**. |
+| Admin Name | The subdomain name prefix used when Admin Method is set to **Upanup Admin** or **Admin Subdomain** (e.g. `name` in `name.admin.upanup.com`). |
+| Custom Admin Name | An optional custom subdomain segment used with **Admin Domain** or **Admin Subdomain**. Overrides the default `admin` segment (e.g. enter `myadmin` to get `myadmin.domain.com` or `name.myadmin.domain.com`). Leave blank to use the default `admin`. |
 
 Requires the `administer upanup_admin` permission.
 

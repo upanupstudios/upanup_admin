@@ -99,136 +99,88 @@ class CustomAdminRedirect implements EventSubscriberInterface {
       $scheme = $request->getScheme();
       $host = $request->getHost();
       $uri = $request->getRequestUri();
+
       $route_name = $this->routeMatch->getRouteName();
 
       // Check if modules are installed/enabled.
       $upanup_auth_exists = $this->moduleHandler->moduleExists('upanup_auth');
       $samlauth_exists = $this->moduleHandler->moduleExists('samlauth');
+      // TODO: Need to check for disable login module?
+      // $disable_login_exists = $this->moduleHandler->moduleExists('disable_login');
 
-      $login_routes = [
+      // Login and logout routes.
+      // TODO: Add password reset?
+      $redirect_routes = [
         'user.login',
-      ];
-
-      $logout_routes = [
         'user.logout',
+        'user.pass',
+        'user.reset.login',
       ];
 
       if ($upanup_auth_exists) {
-        $login_routes[] = 'upanup_auth.saml_controller_login';
-        $logout_routes[] = 'upanup_auth.saml_controller_logout';
+        $redirect_routes[] = 'upanup_auth.saml_controller_login';
+        $redirect_routes[] = 'upanup_auth.saml_controller_acs';
+        $redirect_routes[] = 'upanup_auth.saml_controller_logout';
       }
 
       if ($samlauth_exists) {
-        $login_routes[] = 'samlauth.saml_controller_login';
-        $logout_routes[] = 'samlauth.saml_controller_logout';
+        $redirect_routes[] = 'samlauth.saml_controller_login';
+        $redirect_routes[] = 'samlauth.saml_controller_acs';
+        $redirect_routes[] = 'samlauth.saml_controller_logout';
       }
-
-      $redirect_routes = array_merge($login_routes, $logout_routes);
 
       $admin_method = $this->settings->get('admin_method');
-
-      // URI pattern.
-      $uri_segments = ['user'];
-
-      if ($upanup_auth_exists) {
-        $uri_segments[] = 'upanup';
-      }
-
-      if ($samlauth_exists) {
-        $uri_segments[] = 'saml';
-      }
-
-      $uri_pattern = '/^\\/(' . implode('|', $uri_segments) . ')\//';
+      $admin_name = $this->settings->get('admin_name');
+      $admin_custom = $this->settings->get('admin_custom') ?: 'admin';
 
       if ($admin_method === 'admin_subdomain') {
-        $admin_name = $this->settings->get('admin_name');
-        $admin_prefix_pattern = '/^' . preg_quote($admin_name, '/') . '\./';
-        $is_admin_host = (bool) preg_match($admin_prefix_pattern, $host);
+        $admin_host_pattern = '/^' . preg_quote($admin_name, '/') . '\.' . preg_quote($admin_custom, '/') . '\./';
+        $is_admin_host = (bool) preg_match($admin_host_pattern, $host);
 
         if ($this->account->isAnonymous()) {
-          // Redirect regular host to admin on login.
-          if (!$is_admin_host && in_array($route_name, $login_routes) && preg_match($uri_pattern, $uri)) {
-            $url = $scheme . '://' . $admin_name . '.' . $host . $uri;
+          // Redirect subdomain to admin if on login/logout routes.
+          if (!$is_admin_host && in_array($route_name, $redirect_routes)) {
+            $host = preg_replace('/' . preg_quote($admin_name, '/') .'\./', $admin_name . '.' . $admin_custom . '.', $host);
+            $url = $scheme . '://' . $host . $uri;
             $response = new TrustedRedirectResponse($url);
             $event->setResponse($response);
           }
-          // Redirect admin host to regular on logout.
-          elseif ($is_admin_host && in_array($route_name, $logout_routes)) {
-            $regular_host = substr($host, strlen($admin_name) + 1);
-            $url = 'https://' . $regular_host . $uri;
+          // Redirect admin to subdomain if not on login/logout routes.
+          elseif ($is_admin_host && !in_array($route_name, $redirect_routes)) {
+            $host = preg_replace('/' . preg_quote($admin_name, '/') . '\.' . preg_quote($admin_custom, '/') . '\./', $admin_name . '.', $host);
+            $url = 'https://' . $host . $uri;
             $response = new TrustedRedirectResponse($url);
             $event->setResponse($response);
           }
         }
-        else {
-          // Redirect authenticated users from regular host to admin.
-          if (!$is_admin_host) {
-            $url = $scheme . '://' . $admin_name . '.' . $host . $uri;
+      }
+      elseif ($admin_method === 'admin_domain') {
+        // WWW host pattern.
+        $www_host_pattern = '/^www\./';
+        $admin_host_pattern = '/(^' . preg_quote($admin_custom, '/') . '\.)/';
+        $is_admin_host = (bool) preg_match($admin_host_pattern, $host);
+
+        if ($this->account->isAnonymous()) {
+          // Redirect www to admin if on login/logout routes.
+          if (!$is_admin_host && in_array($route_name, $redirect_routes)) {
+            $host = preg_replace($www_host_pattern, $admin_custom . '.', $host);
+            $url = $scheme . '://' . $host . $uri;
+            $response = new TrustedRedirectResponse($url);
+            $event->setResponse($response);
+          }
+          // Redirect admin to www if not on login/logout routes.
+          elseif ($is_admin_host && !in_array($route_name, $redirect_routes)) {
+            $host = preg_replace('/' . preg_quote($admin_custom, '/') . '\./', 'www.', $host);
+            $url = $scheme . '://' . $host . $uri;
             $response = new TrustedRedirectResponse($url);
             $event->setResponse($response);
           }
         }
       }
       else {
-        // WWW host pattern.
-        $www_host_pattern = '/^www\./';
-
-        if ($admin_method === 'upanup_admin') {
-          // Admin host pattern, can use either one.
-          $admin_host_pattern = '/(admin\.upanup\.com)$/';
-        }
-        else {
-          $admin_host_pattern = '/(^admin\.)/';
-        }
-
-        if ($this->account->isAnonymous()) {
-          // Redirect www to admin.
-          if (preg_match($www_host_pattern, $host)) {
-            if (in_array($route_name, $redirect_routes) && preg_match($uri_pattern, $uri)) {
-              // Redirect to admin.
-              if ($admin_method === 'upanup_admin') {
-                $admin_name = $this->settings->get('admin_name');
-                $host = $admin_name . '.admin.upanup.com';
-              }
-              else {
-                $host = preg_replace($www_host_pattern, 'admin.', $host);
-              }
-
-              $url = $scheme . '://' . $host . $uri;
-
-              $response = new TrustedRedirectResponse($url);
-              $event->setResponse($response);
-            }
-          }
-
-          // Redirects admin to www on logout.
-          if ($admin_method !== 'upanup_admin' && preg_match($admin_host_pattern, $host)) {
-            if (in_array($route_name, $logout_routes)) {
-              $host = preg_replace($admin_host_pattern, 'www.', $host);
-              $url = 'https://' . $host . $uri;
-
-              $response = new TrustedRedirectResponse($url);
-              $event->setResponse($response);
-            }
-          }
-        }
-        else {
-          // Redirect authenticated users from www to admin.
-          if (preg_match($www_host_pattern, $host)) {
-            if ($admin_method === 'upanup_admin') {
-              $admin_name = $this->settings->get('admin_name');
-              $host = $admin_name . '.admin.upanup.com';
-            }
-            else {
-              $host = preg_replace($www_host_pattern, 'admin.', $host);
-            }
-
-            $url = $scheme . '://' . $host . $uri;
-
-            $response = new TrustedRedirectResponse($url);
-            $event->setResponse($response);
-          }
-        }
+        // Upanup Admin method, redirect to admin subdomain with name prefix.
+        // $admin_host_pattern = '/(admin\.upanup\.com)$/';
+        // TODO: Need to test.
       }
     }
   }
