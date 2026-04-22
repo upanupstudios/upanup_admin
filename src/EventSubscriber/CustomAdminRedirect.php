@@ -115,6 +115,8 @@ class CustomAdminRedirect implements EventSubscriberInterface {
         'user.logout',
         'user.pass',
         'user.reset.login',
+        'system.files',
+        'system.private_file_download',
       ];
 
       if ($upanup_auth_exists) {
