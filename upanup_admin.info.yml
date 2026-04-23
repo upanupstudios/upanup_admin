@@ -4,6 +4,3 @@ type: module
 core_version_requirement: ^9.0 || ^10 || ^11
 package: Upanup
 version: '10.x-2.0'
-dependencies:
-  - admin_toolbar:admin_toolbar
-  - ckeditor5:ckeditor5

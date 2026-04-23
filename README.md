@@ -2,7 +2,7 @@
 
 ## Overview
 
-Custom module that provides admin UI enhancements, styling overrides, and admin redirect functionality for Upanup Drupal sites.
+Custom module that provides admin redirect functionality for Upanup Drupal sites.
 
 - **Package:** Upanup
 - **Version:** 10.x-2.0
@@ -36,23 +36,6 @@ An event subscriber (`CustomAdminRedirect`) fires on every request and can redir
 
 The redirect is only applied to anonymous users and targets login/logout routes (`user.login`, `user.logout`). If the `upanup_auth` or `samlauth` modules are present, login/logout routes are also included.
 
-### Admin Styling
-
-Custom CSS libraries are conditionally attached to every page:
-
-- **`ck5`** — Style overrides for the CKEditor 5 editor.
-- **`admin-toolbar`** — Style overrides for the Admin Toolbar, loaded only for users with the `access toolbar` permission.
-
-SCSS source files are included alongside the compiled CSS under `libraries/`.
-
-### Node Edit Form Override
-
-Overrides the core `node_edit_form` Twig template with a custom version located in `templates/`, allowing layout customisation of the node edit page.
-
-### Paragraph Preview Template
-
-Registers a custom theme suggestion (`paragraph__content_row__preview`) applied to any paragraph rendered in the `preview` view mode, with a corresponding template at `templates/paragraph--content-row--preview.html.twig`.
-
 ---
 
 ## Configuration
@@ -67,13 +50,6 @@ Navigate to **Admin > Configuration > User Interface > Upanup Admin** (`/admin/u
 | Custom Admin Name | An optional custom subdomain segment used with **Admin Domain** or **Admin Subdomain**. Overrides the default `admin` segment (e.g. enter `myadmin` to get `myadmin.domain.com` or `name.myadmin.domain.com`). Leave blank to use the default `admin`. |
 
 Requires the `administer upanup_admin` permission.
-
----
-
-## Dependencies
-
-- [Admin Toolbar](https://www.drupal.org/project/admin_toolbar) (`admin_toolbar:admin_toolbar`)
-- [CKEditor 5](https://www.drupal.org/project/ckeditor5) (`ckeditor5:ckeditor5`)
 
 ---
 
